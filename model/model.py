@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader, TensorDataset, random_split, WeightedRa
 import json, time
 
 # 颜色转换
-from colormath.color_objects import XYZColor, LabColor
+from colormath.color_objects import XYZColor, LabColor, sRGBColor
 from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cie2000
 
@@ -26,8 +26,8 @@ sns.set_theme(style="whitegrid")
 # ============================================================
 # 0) 全局配置
 # ============================================================
-DATASET_DIR = "datasets"    # JSON 数据目录
-OUTPUT_DIR = "output"       # 输出文件目录
+DATASET_DIR = "datasets"      # JSON 数据目录
+OUTPUT_DIR = "output"         # 输出文件目录
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 BATCH_SIZE = 256
 EPOCHS = 30
@@ -36,6 +36,8 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
+# 新增：导出样本数量
+MAX_EXPORT_SAMPLES = 500
 
 # ============================================================
 # 1) 加载 JSON 数据集：返回 DataFrame(L1,a1,b1,L2,a2,b2,DE_human)
@@ -238,7 +240,7 @@ for epoch in range(1, EPOCHS+1):
 
     val_mse = vloss / (vcount + 1e-9)
 
-    print(f"Epoch {epoch:02d}  训练loss={train_loss:.6f}  验证MSE={val_mse:.6f}  时间={time.time()-t0:.1f}s")
+    print(f"Epoch {epoch:02d}   训练loss={train_loss:.6f}   验证MSE={val_mse:.6f}   时间={time.time()-t0:.1f}s")
 
     if val_mse < best_val:
         best_val = val_mse
@@ -283,50 +285,60 @@ print(f"模型相关系数 R(model)   = {r_model:.4f}")
 print(f"DE2000 相关系数 R(DE2000) = {r_de2000:.4f}")
 
 # ============================================================
-# 6.5) 将 Lab 转换回 RGB，导出完整数据集
+# 6.5) 【重要修改】将 Lab 转换回 RGB，导出完整数据集
 # ============================================================
 def lab_to_rgb(L, a, b):
-    """Lab -> XYZ -> RGB (D65 标准光源, sRGB 色域)"""
-    lab_obj = LabColor(L, a, b)
-    # Lab -> XYZ
-    xyz_obj = convert_color(lab_obj, XYZColor)
-    x, y, z = xyz_obj.xyz_x, xyz_obj.xyz_y, xyz_obj.xyz_z
+    """
+    使用 colormath 库将 Lab 转换回 sRGB。
+    Lab -> XYZ -> sRGB，并正确处理边界和伽马校正。
+    """
+    try:
+        lab_obj = LabColor(L, a, b)
+        rgb_obj = convert_color(lab_obj, sRGBColor)
+        
+        r = rgb_obj.rgb_r
+        g = rgb_obj.rgb_g
+        b = rgb_obj.rgb_b
+        
+        # 裁剪到 [0, 1] 范围，并转换为 [0, 255] 的整数
+        r_int = int(np.clip(r, 0, 1) * 255)
+        g_int = int(np.clip(g, 0, 1) * 255)
+        b_int = int(np.clip(b, 0, 1) * 255)
+        
+        return r_int, g_int, b_int
     
-    # XYZ -> RGB (D65 to sRGB 矩阵)
-    # 标准 XYZ to sRGB 转换矩阵
-    matrix = np.array([
-        [ 3.2406, -1.5372, -0.4986],
-        [-0.9689,  1.8758,  0.0415],
-        [ 0.0557, -0.2040,  1.0570]
-    ])
-    rgb_linear = matrix @ np.array([x, y, z])
-    
-    # 伽马校正 (gamma = 2.4)
-    def srgb_gamma(c):
-        if c <= 0.0031308:
-            return 12.92 * c
-        else:
-            return 1.055 * (c ** (1/2.4)) - 0.055
-    
-    rgb = np.array([srgb_gamma(c) for c in rgb_linear])
-    
-    # 裁剪到 [0, 1] 再转换为 [0, 255]
-    rgb = np.clip(rgb, 0, 1) * 255
-    return tuple(map(int, np.round(rgb)))
+    except Exception as e:
+        # 转换失败时，返回一个中性灰，防止程序崩溃
+        return 128, 128, 128 
 
-# 构建导出数据
+
+# 构建一个包含所有必要数据的数组
+full_data = np.hstack([X, true_all, de2000_vals, preds_un]) # L1, a1, b1, L2, a2, b2, human, de2000, model
+
+# 1. 创建随机索引 (大范围随机采样)
+np.random.shuffle(full_data)
+# 仅保留最大导出数量的样本
+data_to_export = full_data[:min(len(full_data), len(full_data))] # 实际上是全部，但先保留命名
+
 export_data = []
-n_export = min(len(X), 500)  # 导出最多 500 条样本
+rgb_seen = set() # 用于去重：存储 (r1, g1, b1, r2, g2, b2) 的元组
 
-for i in range(n_export):
-    L1, a1, b1, L2, a2, b2 = X[i]
+# 2. 遍历并执行转换和去重
+for row in data_to_export:
+    L1, a1, b1, L2, a2, b2, human_score, de2000_score, model_score = row
+
     r1, g1, b1_rgb = lab_to_rgb(L1, a1, b1)
     r2, g2, b2_rgb = lab_to_rgb(L2, a2, b2)
-    
-    human_score = float(true_all[i, 0])
-    model_score = float(preds_un[i, 0])
-    de2000_score = float(de2000_vals[i, 0])
-    
+
+    # **去重逻辑：检查转换后的 RGB 对是否重复**
+    # 颜色顺序无关，所以我们规范化顺序
+    rgb_pair = tuple(sorted((r1, g1, b1_rgb, r2, g2, b2_rgb)))
+
+    if rgb_pair in rgb_seen:
+        continue # 跳过重复的 RGB 颜色对
+
+    rgb_seen.add(rgb_pair)
+
     entry = {
         "color1": {"r": int(r1), "g": int(g1), "b": int(b1_rgb)},
         "color2": {"r": int(r2), "g": int(g2), "b": int(b2_rgb)},
@@ -336,15 +348,20 @@ for i in range(n_export):
     }
     export_data.append(entry)
 
+    # 3. 限制导出数量
+    if len(export_data) >= MAX_EXPORT_SAMPLES:
+        break
+
+
 # 导出为 JSON
 export_json_path = os.path.join(OUTPUT_DIR, "color_comparison_results.json")
 with open(export_json_path, "w", encoding="utf-8") as f:
     json.dump(export_data, f, indent=2, ensure_ascii=False)
 
-print(f"\n已导出数据到 {export_json_path}，共 {len(export_data)} 条样本")
+print(f"\n已导出数据到 {export_json_path}，共 {len(export_data)} 条【去重和随机采样后】的样本")
 
 # ============================================================
-# 7) 可视化结果
+# 7) 可视化结果 (保持不变)
 # ============================================================
 plt.figure()
 plt.scatter(true_all, preds_un, s=6, alpha=0.4)

@@ -1,0 +1,93 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f9fc; /* 柔和的浅灰色背景 */
+    color: #333;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #007bff; /* 品牌蓝 */
+    margin-bottom: 30px;
+    font-weight: 300;
+}
+
+#color-comparisons {
+    max-width: 900px;
+    margin: 0 auto; /* 居中显示 */
+}
+
+.color-comparison {
+    display: flex;
+    align-items: center;
+    gap: 30px; /* 增加元素间距 */
+    margin-bottom: 15px;
+    padding: 20px;
+    border: none;
+    border-radius: 12px; /* 圆角 */
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 柔和阴影 */
+    transition: transform 0.2s ease-in-out;
+}
+
+.color-comparison:hover {
+    transform: translateY(-2px); /* 悬停微动效果 */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+.color-box-container {
+    display: flex;
+    gap: 10px;
+}
+
+.color-box {
+    width: 80px;
+    height: 80px;
+    border: 3px solid #eee; /* 浅色边框，避免与颜色块冲突 */
+    border-radius: 8px; /* 颜色块圆角 */
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.scores {
+    flex-grow: 1; /* 占据剩余空间 */
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.scores p {
+    margin: 3px 0;
+}
+
+.scores strong {
+    font-weight: 600;
+    color: #555;
+}
+
+/* 强调最重要的数值，即 Model Prediction 和 ΔE raw 的差异 */
+.difference-score {
+    font-weight: bold;
+    color: #e63946; /* 醒目的颜色 */
+}
+
+/* 新增：用于显示模型误差对比的样式 */
+.error-comparison-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    font-size: 15px; /* 略小于主评分 */
+}
+
+/* 突出显示性能更好的模型（误差更低） */
+.highlight-win {
+    font-weight: bold;
+    color: #28a745; /* 绿色，表示胜利/更优 */
+    background-color: #e9f8ed; /* 浅绿背景 */
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+/* 性能较差的模型 */
+.highlight-loss {
+    font-weight: normal;
+    color: #6c757d; /* 灰色，不突出显示 */
+}
