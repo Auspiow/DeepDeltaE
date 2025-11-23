@@ -36,7 +36,6 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
-OUTPUT_DIR_ALGO = "output/siamese_weights" # 导出权重的新目录
 MAX_EXPORT_SAMPLES = 500 # 导出样本数量
 
 # ============================================================
@@ -134,7 +133,7 @@ norm_constants = {
     "y_mean": float(y_mean),
     "y_std": float(y_std)
 }
-with open(os.path.join(OUTPUT_DIR_ALGO, "norm_constants.json"), "w") as f:
+with open(os.path.join(OUTPUT_DIR, "norm_constants.json"), "w") as f:
     json.dump(norm_constants, f, indent=2)
 
 print(f"归一化常数 (Mean:{y_mean:.4f}, Std:{y_std:.4f}) 已保存到 norm_constants.json。")
