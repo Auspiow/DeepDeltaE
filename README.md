@@ -13,6 +13,12 @@
 └─output     # 图表和数据
 ```
 
+展示截图：
+
+<img src="./images/display.png" alt="display" style="zoom: 33%;" />
+
+
+
 ## 一. 色彩科学简介
 
 ### 1. CIE（国际照明委员会）
@@ -413,7 +419,7 @@ plt.savefig("scatter_siamese_pred_vs_human.png", dpi=150)
 plt.close()
 ```
 
-<img src="./../output/scatter_siamese_pred_vs_human.png" style="zoom: 50%;" />
+<img src="./output/scatter_siamese_pred_vs_human.png" style="zoom: 50%;" />
 
 ### 6.2 误差直方图（error hist）
 
@@ -426,7 +432,7 @@ plt.savefig("hist_error_siamese.png", dpi=150)
 plt.close()
 ```
 
-<img src="./../output/hist_error_siamese.png" style="zoom:50%;" />
+<img src="./output/hist_error_siamese.png" style="zoom:50%;" />
 
 ### 6.3 R值对比图（R comparison bar）
 
@@ -441,7 +447,7 @@ plt.savefig("r_comparison_siamese.png", dpi=150)
 plt.close()
 ```
 
-<img src="./../output/r_comparison_siamese.png" style="zoom:50%;" />
+<img src="./output/r_comparison_siamese.png" style="zoom:50%;" />
 
 ### 6.4 实验结果
 
