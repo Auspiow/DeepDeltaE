@@ -497,10 +497,18 @@ AI 模型显著超越 DE2000（≈ +0.15），达到接近人类间一致性（i
 
 
 
-【1】维基百科/CIEhttps://zh.wikipedia.org/wiki/%E5%9B%BD%E9%99%85%E7%85%A7%E6%98%8E%E5%A7%94%E5%91%98%E4%BC%9A
+【1】维基百科/CIE
 
-【2】维基百科/CIE 1931色彩空间https://zh.wikipedia.org/wiki/CIE_1931%E8%89%B2%E5%BD%A9%E7%A9%BA%E9%97%B4
+https://zh.wikipedia.org/wiki/%E5%9B%BD%E9%99%85%E7%85%A7%E6%98%8E%E5%A7%94%E5%91%98%E4%BC%9A
 
-【3】 Colour-Science 仓库https://www.colour-science.org/api/0.3.2/html/_modules/colour/models/rgb.html
+【2】维基百科/CIE 1931色彩空间
 
-【4】Google/material-color-utilities官方github仓库https://github.com/material-foundation/material-color-utilities/tree/main/dart/lib/hct
+https://zh.wikipedia.org/wiki/CIE_1931%E8%89%B2%E5%BD%A9%E7%A9%BA%E9%97%B4
+
+【3】 Colour-Science 仓库
+
+https://www.colour-science.org/api/0.3.2/html/_modules/colour/models/rgb.html
+
+【4】Google/material-color-utilities官方github仓库
+
+https://github.com/material-foundation/material-color-utilities/tree/main/dart/lib/hct
